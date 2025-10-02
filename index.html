@@ -2,115 +2,175 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲端隨機數字產生器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>六點位反應訓練器</title>
     <style>
+        /* 基本樣式 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #121212; /* 深色背景 */
+            color: white;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f2f5;
-            flex-direction: column;
+            overflow: hidden; /* 避免手機上滑動 */
         }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-        }
-        h1 {
-            color: #333;
-            margin-top: 0;
-        }
-        .param-section {
-            margin-bottom: 20px;
-        }
-        label {
-            font-size: 16px;
-            color: #555;
-        }
-        input[type="number"] {
-            width: 80px;
-            padding: 8px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            text-align: center;
-        }
-        .results {
+
+        /* 控制面板 */
+        .controls {
             display: flex;
-            justify-content: center;
-            gap: 10px;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            margin: 20px 0;
-            min-height: 50px;
+            justify-content: center;
+            padding: 10px;
         }
-        .number-box {
-            width: 50px;
-            height: 50px;
-            background-color: #007bff;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
+        .controls label, .controls input, .controls select, .controls button {
+            font-size: 16px;
+        }
+        .controls input[type="number"] {
+            width: 60px;
+        }
+
+        /* 6個點位的網格容器 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 兩欄 */
+            gap: 15px;
+            width: 90%;
+            max-width: 500px;
+            height: 60%;
+            max-height: 700px;
+        }
+
+        /* 每個點位的方塊 */
+        .box {
+            background-color: #333; /* 預設暗灰色 */
             display: flex;
             justify-content: center;
             align-items: center;
-            border-radius: 8px;
+            font-size: 3em;
+            font-weight: bold;
+            border-radius: 10px;
+            transition: background-color 0.1s ease; /* 顏色變換動畫 */
         }
-        button {
-            padding: 12px 24px;
-            font-size: 18px;
-            color: white;
-            background-color: #28a745;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #218838;
-        }
+        
+        /* 動態亮燈的顏色 class */
+        .active-B { background-color: #007bff; } /* Blue */
+        .active-Y { background-color: #ffc107; } /* Yellow */
+        .active-R { background-color: #dc3545; } /* Red */
+        .active-G { background-color: #28a745; } /* Green */
+
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>雲端隨機數字產生器</h1>
-        <div class="param-section">
-            <label for="max-number">最大數字 (1 到): </label>
-            <input type="number" id="max-number" value="100" min="6">
-        </div>
-        <div class="results" id="results-container"></div>
-        <button onclick="generateNumbers()">產生數字</button>
+    <h1>六點位反應訓練器</h1>
+
+    <div class="controls">
+        <label for="interval">間隔(秒):</label>
+        <input type="number" id="interval" value="5" min="1">
+        
+        <label for="color-select">顏色:</label>
+        <select id="color-select">
+            <option value="B">藍色</option>
+            <option value="Y">黃色</option>
+            <option value="R">紅色</option>
+            <option value="G">綠色</option>
+        </select>
+        
+        <button id="startBtn">開始訓練</button>
+        <button id="stopBtn" disabled>停止訓練</button>
+    </div>
+
+    <div class="grid-container">
+        <div class="box" id="box-1">1</div>
+        <div class="box" id="box-4">4</div>
+        <div class="box" id="box-2">2</div>
+        <div class="box" id="box-5">5</div>
+        <div class="box" id="box-3">3</div>
+        <div class="box" id="box-6">6</div>
     </div>
 
     <script>
-        function generateNumbers() {
-            const maxNumber = parseInt(document.getElementById('max-number').value);
-            const resultsContainer = document.getElementById('results-container');
-            resultsContainer.innerHTML = '';
-            
-            if (isNaN(maxNumber) || maxNumber < 6) {
-                alert('請輸入一個大於或等於6的數字');
-                return;
+        // 獲取所有需要操作的 HTML 元素
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const intervalInput = document.getElementById('interval');
+        const colorSelect = document.getElementById('color-select');
+        const boxes = document.querySelectorAll('.box'); // 獲取全部6個方塊
+
+        let timer = null; // 用來存放計時器
+        let lastActiveBox = null; // 紀錄上一個亮的方塊
+
+        // 開始訓練的函式
+        function startTraining() {
+            // 避免重複啟動，先清除舊的計時器
+            if (timer) {
+                clearInterval(timer);
             }
 
-            for (let i = 0; i < 6; i++) {
-                const randomNumber = Math.floor(Math.random() * maxNumber) + 1;
-                const numberBox = document.createElement('div');
-                numberBox.className = 'number-box';
-                numberBox.textContent = randomNumber;
-                resultsContainer.appendChild(numberBox);
-            }
+            // 讀取使用者設定
+            const intervalSeconds = parseInt(intervalInput.value) * 1000; // 轉成毫秒
+            
+            // UI 控制
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            intervalInput.disabled = true;
+            colorSelect.disabled = true;
+
+            // 啟動計時器，並規律執行 runDrill 函式
+            timer = setInterval(runDrill, intervalSeconds);
         }
-        // 使用 window.onload 確保頁面元素都載入完成後再執行
-        window.onload = generateNumbers;
+
+        // 停止訓練的函式
+        function stopTraining() {
+            clearInterval(timer); // 清除計時器
+            timer = null;
+
+            // 清除最後一個亮的方塊
+            if (lastActiveBox) {
+                lastActiveBox.className = 'box'; // 恢復預設樣式
+            }
+            lastActiveBox = null;
+            
+            // UI 控制
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            intervalInput.disabled = false;
+            colorSelect.disabled = false;
+        }
+
+        // 執行單次亮燈的核心函式
+        function runDrill() {
+            // 1. 如果有已經亮的方塊，先熄滅它
+            if (lastActiveBox) {
+                lastActiveBox.className = 'box'; // 恢復成只有 'box' 這個 class
+            }
+
+            // 2. 產生 1 到 6 的隨機數字
+            const randomNumber = Math.floor(Math.random() * 6) + 1;
+            
+            // 3. 找到對應的方塊
+            const newActiveBox = document.getElementById('box-' + randomNumber);
+            
+            // 4. 獲取使用者選擇的顏色
+            const selectedColor = colorSelect.value; // 會得到 "B", "Y", "R", 或 "G"
+            
+            // 5. 幫方塊加上新的樣式 class，讓它亮起來
+            newActiveBox.className = 'box active-' + selectedColor;
+            
+            // 6. 紀錄這次亮的方塊，以便下次熄滅
+            lastActiveBox = newActiveBox;
+        }
+
+        // 幫按鈕加上點擊事件監聽
+        startBtn.addEventListener('click', startTraining);
+        stopBtn.addEventListener('click', stopTraining);
     </script>
 
 </body>
