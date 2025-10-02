@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雲端隨機數字產生器</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            flex-direction: column;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .param-section {
+            margin-bottom: 20px;
+        }
+        label {
+            font-size: 16px;
+            color: #555;
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .results {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            min-height: 50px;
+        }
+        .number-box {
+            width: 50px;
+            height: 50px;
+            background-color: #007bff;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>雲端隨機數字產生器</h1>
+        <div class="param-section">
+            <label for="max-number">最大數字 (1 到): </label>
+            <input type="number" id="max-number" value="100" min="6">
+        </div>
+        <div class="results" id="results-container"></div>
+        <button onclick="generateNumbers()">產生數字</button>
+    </div>
+
+    <script>
+        function generateNumbers() {
+            const maxNumber = parseInt(document.getElementById('max-number').value);
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = '';
+            
+            if (isNaN(maxNumber) || maxNumber < 6) {
+                alert('請輸入一個大於或等於6的數字');
+                return;
+            }
+
+            for (let i = 0; i < 6; i++) {
+                const randomNumber = Math.floor(Math.random() * maxNumber) + 1;
+                const numberBox = document.createElement('div');
+                numberBox.className = 'number-box';
+                numberBox.textContent = randomNumber;
+                resultsContainer.appendChild(numberBox);
+            }
+        }
+        // 使用 window.onload 確保頁面元素都載入完成後再執行
+        window.onload = generateNumbers;
+    </script>
+
+</body>
+</html>
